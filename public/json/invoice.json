@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "amount": "150.00",
+    "date": "2025-01-15",
+    "transactionNumber": "TX123456"
+  },
+  {
+    "id": 2,
+    "amount": "200.00",
+    "date": "2025-01-16",
+    "transactionNumber": "TX123457"
+  },
+  {
+    "id": 3,
+    "amount": "250.00",
+    "date": "2025-01-17",
+    "transactionNumber": "TX123458"
+  },
+  {
+    "id": 4,
+    "amount": "180.00",
+    "date": "2025-01-18",
+    "transactionNumber": "TX123459"
+  }
+]
