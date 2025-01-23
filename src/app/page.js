@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     const loadInvoices = async () => {
       try {
-        const response = await fetch('/json/invoice.json');
+        const response = await fetch(`${process.env.NEST_APP_API_URL}/upload/invoice`);
 
         if (!response.ok) {
           throw new Error('Response Null')
@@ -35,27 +35,39 @@ export default function Home() {
     loadInvoices()
   }, [])
 
-  const InvoiceUploader = (event) => {
-    const file = event.target.files[0]
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    InvoiceUploader(file); // Llama a la función con el archivo
+  };
+
+  const InvoiceUploader = async (file) => {
 
     if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Logic
+      try {
+        const response = await fetch(`${process.env.NEST_APP_API_URL}/upload/invoice`, {
+          method: 'POST',
+          body: formData,
+        });
 
-      const newInvoice = {
-        id: invoices.length + 1,
-        amount: "100.00", // Ejemplo de monto
-        date: new Date().toLocaleDateString(), // Fecha actual
-        transactionNumber: `TX${invoinces.length + 100000}`
+        if (!response.ok) {
+          throw new Error('Failed to upload invoice');
+        }
+
+        setMessage('Invoice Uploaded Successfully');
+        setError('');
+
+        loadInvoices();
+      } catch (error) {
+        console.error("Error uploading invoice", error);
+        setError('Error Uploading Invoice');
+        setMessage('');
       }
-
-      setInvoices([...invoices, newInvoice])
-
-      setMessage('Invoice Uploaded Successfully')
-      setError('')
     } else {
-      setError('Error Uploading Invoice')
-      setMessage('')
+      setError('No file selected for upload');
+      setMessage('');
     }
   }
 
@@ -67,20 +79,19 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <h1>Upload your Invoice</h1>
-        <Input type="file" onChange={InvoiceUploader} />
+        <Input type="file" accept=".pdf" onChange={handleFileChange} />
         <Button onClick={InvoiceUploader}>Upload</Button>
         {message && <Alert type="success">{message}</Alert>}
         {error && <Alert type="error">{error}</Alert>}
-
         <Table className={styles.invoiceTable}>
           <TableCaption className={styles.subTitle}>
             <h2>List of Invoices</h2>
           </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]" style={{}}>Invoice</TableHead>
+              <TableHead className="w-[100px]">Invoice</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Transaction Number</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
@@ -88,9 +99,9 @@ export default function Home() {
             {invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">{invoice.id}</TableCell>
-                <TableCell>{invoice.date}</TableCell>
-                <TableCell>{invoice.transactionNumber}</TableCell>
-                <TableCell className="text-right">{invoice.amount}</TableCell>
+                <TableCell>{invoice.due_date}</TableCell>
+                <TableCell>{invoice.bill_to}</TableCell>
+                <TableCell className="text-right">{invoice.total_amount}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -98,8 +109,7 @@ export default function Home() {
             <TableRow>
               <TableCell colSpan={3}>Total</TableCell>
               <TableCell className="text-right">
-                ${invoices.reduce((total, invoice) => total +
-                  parseFloat(invoice.amount), 0).toFixed(2)}
+                ${invoices.reduce((total, invoice) => total + parseFloat(invoice.total_amount || 0), 0).toFixed(2)}
               </TableCell>
             </TableRow>
           </TableFooter>
